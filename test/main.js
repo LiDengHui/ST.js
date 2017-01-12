@@ -4,12 +4,17 @@ let PImage = ST.Particle.PImage;
 
 TestST = {};
 
-TestST.renderer= new ST.Renderer(document.body.offsetWidth,document.body.offsetHeight);
+TestST.renderer = new ST.Renderer(document.body.offsetWidth, document.body.offsetHeight);
 
-document.body.appendChild(TestST.renderer.view);
+document
+    .body
+    .appendChild(TestST.renderer.view);
 
 let img = new Image();
-img.onload =()=>{
+img.src = "/assert/dicom/572991083d89acc32bb32a6a2be088b6";
+img.onload = () => {
     let pimage = new PImage(img);
-    TestST.renderer.render(pimage);
+    TestST
+        .renderer
+        .render(pimage);
 };

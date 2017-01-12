@@ -40,6 +40,7 @@
     "fetch": "^1.1.0",
     "jquery": "^3.1.1",
     "normalize.css": "^5.0.0",
-    "pixi.js": "^4.2.2"
+    "pixi.js": "^4.2.2",
+    "rollup-plugin-babel": "^2.7.1"
   }
 }

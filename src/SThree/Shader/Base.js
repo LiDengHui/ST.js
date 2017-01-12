@@ -15,6 +15,7 @@ export default class Base {
     initShader(gl){
         this.gl = gl;
         this.program = Base.createProgram(this.gl, this.vshader, this.fshader);
+        
         if (!this.program) {
             console.log('Failed to create program');
             return null;

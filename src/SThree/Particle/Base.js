@@ -31,7 +31,7 @@ export default class Base{
         }
         // Write date into the buffer object
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(data), gl.STATIC_DRAW);
         　// Assign the buffer object to the attribute variable
         let a_attribute = gl.getAttribLocation(gl.program, attribute);
         if (a_attribute < 0) {
