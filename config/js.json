@@ -1,0 +1,11 @@
+{
+    "list": {
+        "jquery": "./node_modules/jquery/dist/jquery.min.js",
+        "fetch": "./node_modules/whatwg-fetch/fetch.js",
+        "Emitter": "./node_modules/browser-emitter/Emitter.js",
+        "Pixi": "./node_modules/pixi.js/pixi.min.js"
+    },
+    "libs": [
+        ["fetch","jquery","Emitter","Pixi"]
+    ]
+}
