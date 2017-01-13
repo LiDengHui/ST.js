@@ -7,6 +7,7 @@ export default class Cateyes extends Base {
         'attribute vec4 aVertexColor;',
         'uniform mat4 mvpMatrix;',
         'uniform float plevel,pwidth,plength;',
+        'uniform bool pinverse;',
         'varying lowp vec4 vColor;',
         'void main(void) {',
         '   gl_Position =vec4(aVertexPosition, 1.0);',
@@ -18,6 +19,7 @@ export default class Cateyes extends Base {
         '   gray = gray - plength/1000.0;',
         '   gray = gray - plevel/1000.0 + pwidth / 2000.0;',
         '   gray = gray / pwidth*1000.0;',
+        '   gray = pinverse?(1.0-gray):gray;',
         '   vColor = vec4(gray,gray,gray,1.0);',
         '}'
     ].join('\n');

@@ -557,146 +557,7 @@ var set = function set(object, property, value, receiver) {
   return value;
 };
 
-var Renderer = function () {
-    //domElement
-    function Renderer(width, height) {
-        classCallCheck(this, Renderer);
-        this.view = {};
-        this.gl = {};
-        this.canvas = {};
-
-        var canvas = this.canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        this.view = canvas;
-        this.gl = Renderer.create3DContext(canvas);
-        return this;
-    }
-
-    createClass(Renderer, [{
-        key: "render",
-
-        /**
-         * 显示
-         */
-        value: function render(particle) {
-            var gl = this.gl;
-            var canvas = this.canvas;
-            gl.clearColor(1.0, 1.0, 1.0, 1.0);
-            gl.enable(gl.DEPTH_TEST);
-
-            var shader = particle.filters[0];
-            this.gl.program = shader.initShader(this.gl);
-
-            var m = new matIV();
-
-            var mMatrix = m.identity(m.create());
-            var vMatrix = m.identity(m.create());
-            var pMatrix = m.identity(m.create());
-            var mvpMatrix = m.identity(m.create());
-
-            // 视图变换坐标矩阵
-            m.lookAt([0.0, 0.0, 0.5], [0, 0, 0], [0, 2, 0], vMatrix);
-
-            // 投影坐标变换矩阵         
-            m.perspective(90, canvas.width / canvas.height, 0.01, 1000, pMatrix);
-
-            m.multiply(pMatrix, vMatrix, mvpMatrix);
-            m.multiply(mvpMatrix, mMatrix, mvpMatrix);
-
-            var uniLocation = gl.getUniformLocation(this.gl.program, 'mvpMatrix');
-            gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
-
-            var plevelLocation = gl.getUniformLocation(this.gl.program, 'plevel');
-            var pwidthLocation = gl.getUniformLocation(this.gl.program, 'pwidth');
-            var plengthLocation = gl.getUniformLocation(this.gl.program, 'plength');
-            gl.uniform1f(plevelLocation, particle.plevel);
-            gl.uniform1f(pwidthLocation, particle.pwidth);
-            gl.uniform1f(plengthLocation, particle.plength);
-
-            gl.viewport(0, 0, canvas.width, canvas.height);
-
-            particle.loadBuffer(this.gl);
-            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-            gl.drawArrays(gl.POINTS, 0, particle.num);
-        }
-    }], [{
-        key: "create3DContext",
-        value: function create3DContext(canvas, options) {
-
-            var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
-            var context = null;
-            for (var i = 0; i < names.length; i++) {
-                try {
-                    context = canvas.getContext(names[i], options);
-                } catch (e) {}
-
-                if (context) {
-                    break;
-                }
-            }
-            return context;
-        }
-    }]);
-    return Renderer;
-}();
-
 var Base = function () {
-    function Base(gl, vertiecs, colors, num) {
-        classCallCheck(this, Base);
-        this.gl = {};
-        this.vertiecs = [];
-        this.colors = [];
-        this.num = 0;
-
-        this.vertiecs = vertiecs;
-        this.colors = colors;
-        this.num = num;
-        return this;
-    }
-
-    createClass(Base, [{
-        key: 'initBuffer',
-        value: function initBuffer(gl) {
-            this.gl = gl;
-            // Write the vertex coordinates and color to the buffer object
-            if (!Base.initArrayBuffer(this.gl, this.vertiecs, 3, gl.FLOAT, 'aVertexPosition')) return -1;
-
-            if (!Base.initArrayBuffer(this.gl, this.colors, 4, gl.FLOAT, 'aVertexColor')) return -1;
-
-            return this.num;
-        }
-    }], [{
-        key: 'initArrayBuffer',
-        value: function initArrayBuffer(gl, data, num, type, attribute) {
-            // Create a buffer object
-            var buffer = gl.createBuffer();
-            if (!buffer) {
-                console.log('Failed to create the buffer object');
-                return false;
-            }
-            // Write date into the buffer object
-            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
-            // Assign the buffer object to the attribute variable
-            var a_attribute = gl.getAttribLocation(gl.program, attribute);
-            if (a_attribute < 0) {
-                console.log('Failed to get the storage location of ' + attribute);
-                return false;
-            }
-            gl.vertexAttribPointer(a_attribute, num, type, false, 0, 0);
-            // Enable the assignment of the buffer object to the attribute variable
-            gl.enableVertexAttribArray(a_attribute);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, null);
-
-            return true;
-        }
-    }]);
-    return Base;
-}();
-
-var Base$2 = function () {
     function Base(gl, vshader, fshader) {
         classCallCheck(this, Base);
         this.gl = {};
@@ -806,7 +667,7 @@ var Cateyes = function (_Base) {
 
         var _this = possibleConstructorReturn(this, (Cateyes.__proto__ || Object.getPrototypeOf(Cateyes)).call(this));
 
-        _this.vshader = ['attribute vec3 aVertexPosition;', 'attribute vec4 aVertexColor;', 'uniform mat4 mvpMatrix;', 'uniform float plevel,pwidth,plength;', 'varying lowp vec4 vColor;', 'void main(void) {', '   gl_Position =vec4(aVertexPosition, 1.0);', '   gl_Position = mvpMatrix * vec4(aVertexPosition, 1.0);', '   gl_PointSize =11.2;', '   vec4 c = aVertexColor;', '   float gray = (c.r * 65536.0) + (c.g * 256.0) + (c.b);', '   gray = gray - plength/1000.0;', '   gray = gray - plevel/1000.0 + pwidth / 2000.0;', '   gray = gray / pwidth*1000.0;', '   vColor = vec4(gray,gray,gray,1.0);', '}'].join('\n');
+        _this.vshader = ['attribute vec3 aVertexPosition;', 'attribute vec4 aVertexColor;', 'uniform mat4 mvpMatrix;', 'uniform float plevel,pwidth,plength;', 'uniform bool pinverse;', 'varying lowp vec4 vColor;', 'void main(void) {', '   gl_Position =vec4(aVertexPosition, 1.0);', '   gl_Position = mvpMatrix * vec4(aVertexPosition, 1.0);', '   gl_PointSize =11.2;', '   vec4 c = aVertexColor;', '   float gray = (c.r * 65536.0) + (c.g * 256.0) + (c.b);', '   gray = gray - plength/1000.0;', '   gray = gray - plevel/1000.0 + pwidth / 2000.0;', '   gray = gray / pwidth*1000.0;', '   gray = pinverse?(1.0-gray):gray;', '   vColor = vec4(gray,gray,gray,1.0);', '}'].join('\n');
         _this.fshader = ['varying lowp vec4 vColor;', 'void main(void) {', 'gl_FragColor = vColor;', '} '].join('\n');
 
         _this.gl = gl;
@@ -817,16 +678,158 @@ var Cateyes = function (_Base) {
     }
 
     return Cateyes;
-}(Base$2);
+}(Base);
 
 var Shader = {
     Cateyes: Cateyes
 };
 
+var Renderer = function () {
+    //domElement
+    function Renderer(width, height) {
+        classCallCheck(this, Renderer);
+        this.view = {};
+        this.gl = {};
+        this.canvas = {};
+
+        var canvas = this.canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        this.view = canvas;
+        this.gl = Renderer.create3DContext(canvas);
+        var shader = new Shader.Cateyes();
+        this.gl.program = shader.initShader(this.gl);
+        return this;
+    }
+
+    createClass(Renderer, [{
+        key: 'render',
+
+        /**
+         * 显示
+         */
+        value: function render(particle) {
+            var gl = this.gl;
+            var canvas = this.canvas;
+            gl.clearColor(1.0, 1.0, 1.0, 1.0);
+            gl.enable(gl.DEPTH_TEST);
+
+            // let shader = particle.filters[0];
+            // this.gl.program = shader.initShader(this.gl);
+
+            var m = new matIV();
+
+            var mMatrix = m.identity(m.create());
+            var vMatrix = m.identity(m.create());
+            var pMatrix = m.identity(m.create());
+            var mvpMatrix = m.identity(m.create());
+
+            // 视图变换坐标矩阵
+            m.lookAt([0.0, 0.0, 1.0], [0, 0, 0], [0, 2, 0], vMatrix);
+
+            // 投影坐标变换矩阵         
+            m.perspective(90, canvas.width / canvas.height, 0.01, 1000, pMatrix);
+
+            m.multiply(pMatrix, vMatrix, mvpMatrix);
+            m.multiply(mvpMatrix, mMatrix, mvpMatrix);
+
+            var uniLocation = gl.getUniformLocation(this.gl.program, 'mvpMatrix');
+            gl.uniformMatrix4fv(uniLocation, false, mvpMatrix);
+
+            var plevelLocation = gl.getUniformLocation(this.gl.program, 'plevel');
+            var pwidthLocation = gl.getUniformLocation(this.gl.program, 'pwidth');
+            var plengthLocation = gl.getUniformLocation(this.gl.program, 'plength');
+            var pinverseLocation = gl.getUniformLocation(this.gl.program, 'pinverse');
+            gl.uniform1f(plevelLocation, particle.plevel);
+            gl.uniform1f(pwidthLocation, particle.pwidth);
+            gl.uniform1f(plengthLocation, particle.plength);
+            gl.uniform1f(pinverseLocation, particle.pinverse);
+            gl.viewport(0, 0, canvas.width, canvas.height);
+
+            particle.loadBuffer(this.gl);
+            gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+            gl.drawArrays(gl.POINTS, 0, particle.num);
+        }
+    }], [{
+        key: 'create3DContext',
+        value: function create3DContext(canvas, options) {
+
+            var names = ["webgl", "experimental-webgl", "webkit-3d", "moz-webgl"];
+            var context = null;
+            for (var i = 0; i < names.length; i++) {
+                try {
+                    context = canvas.getContext(names[i], options);
+                } catch (e) {}
+
+                if (context) {
+                    break;
+                }
+            }
+            return context;
+        }
+    }]);
+    return Renderer;
+}();
+
+var Base$2 = function () {
+    function Base(gl, vertiecs, colors, num) {
+        classCallCheck(this, Base);
+        this.gl = {};
+        this.vertiecs = [];
+        this.colors = [];
+        this.num = 0;
+
+        this.vertiecs = vertiecs;
+        this.colors = colors;
+        this.num = num;
+        return this;
+    }
+
+    createClass(Base, [{
+        key: 'initBuffer',
+        value: function initBuffer(gl) {
+            this.gl = gl;
+            // Write the vertex coordinates and color to the buffer object
+            if (!Base.initArrayBuffer(this.gl, this.vertiecs, 3, gl.FLOAT, 'aVertexPosition')) return -1;
+
+            if (!Base.initArrayBuffer(this.gl, this.colors, 4, gl.FLOAT, 'aVertexColor')) return -1;
+
+            return this.num;
+        }
+    }], [{
+        key: 'initArrayBuffer',
+        value: function initArrayBuffer(gl, data, num, type, attribute) {
+            // Create a buffer object
+            var buffer = gl.createBuffer();
+            if (!buffer) {
+                console.log('Failed to create the buffer object');
+                return false;
+            }
+            // Write date into the buffer object
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(data), gl.STATIC_DRAW);
+            // Assign the buffer object to the attribute variable
+            var a_attribute = gl.getAttribLocation(gl.program, attribute);
+            if (a_attribute < 0) {
+                console.log('Failed to get the storage location of ' + attribute);
+                return false;
+            }
+            gl.vertexAttribPointer(a_attribute, num, type, false, 0, 0);
+            // Enable the assignment of the buffer object to the attribute variable
+            gl.enableVertexAttribArray(a_attribute);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+            return true;
+        }
+    }]);
+    return Base;
+}();
+
 var PImage$1 = function (_Base) {
     inherits(PImage, _Base);
 
-    function PImage(img, plength, pwidth, plevel) {
+    function PImage(img, plength, pwidth, plevel, isInverse) {
         var _ret;
 
         classCallCheck(this, PImage);
@@ -836,9 +839,10 @@ var PImage$1 = function (_Base) {
         _this.vertiecs = [];
         _this.colors = [];
         _this.filters = [];
-        _this.plength = 2047.0;
-        _this.pwidth = 350.0;
-        _this.plevel = 50.0;
+        _this.plength = 3121.0;
+        _this.pwidth = 8191.0;
+        _this.plevel = 4096.0;
+        _this.pinverse = false;
 
         var pixels = PImage.getPixels(img);
         _this.colors = PImage.getColor(pixels);
@@ -848,6 +852,7 @@ var PImage$1 = function (_Base) {
         plength && (_this.plength = plength);
         pwidth && (_this.pwidth = pwidth);
         plevel && (_this.plevel = plevel);
+        isInverse && (_this.pinverse = isInverse);
 
         return _ret = _this, possibleConstructorReturn(_this, _ret);
     }
@@ -877,6 +882,11 @@ var PImage$1 = function (_Base) {
         key: 'setPlevel',
         value: function setPlevel(level) {
             this.plevel = level;
+        }
+    }, {
+        key: 'setPinverse',
+        value: function setPinverse(isInverse) {
+            this.inverse = isInverse;
         }
     }], [{
         key: 'getPixels',
@@ -919,7 +929,7 @@ var PImage$1 = function (_Base) {
         }
     }]);
     return PImage;
-}(Base);
+}(Base$2);
 
 var Particle = {
     PImage: PImage$1
@@ -939,7 +949,7 @@ TestST.renderer = new ST.Renderer(document.body.offsetWidth, document.body.offse
 document.body.appendChild(TestST.renderer.view);
 
 var img = new Image();
-img.src = "/assert/dicom/572991083d89acc32bb32a6a2be088b6";
+img.src = "/assert/dicom/12e20f8ce961763f7b1143e9077609e9";
 var pimage = null;
 img.onload = function () {
     pimage = new PImage(img);
@@ -947,30 +957,51 @@ img.onload = function () {
 
     bindClick();
 };
-
+document.querySelector('body').addEventListener('touchstart', function (ev) {
+    event.preventDefault();
+});
 var bindClick = function bindClick() {
     var canvas = TestST.renderer.view;
-    canvas.onmousedown = function (ev) {
-        var base_x = ev.x;
-        var base_y = ev.y;
-        canvas.onmouseup = function (ev) {
-            canvas.onmousemove = null;
-            canvas.onmouseup = null;
-        };
+    var base_x = null;
+    var base_y = null;
 
-        canvas.onmousemove = function (ev) {
-            var clevel = (ev.x - base_x) * 1;
-            var cwidth = (ev.y - base_y) * 1;
+    function move1(ev) {
+        if (base_x == null || base_y == null) {
             base_x = ev.x;
             base_y = ev.y;
-            pimage.setPlevel(pimage.plevel + clevel);
-            pimage.setPwidth(pimage.pwidth + cwidth);
+            return;
+        }
+        var clevel = (ev.x - base_x) * 5;
+        var cwidth = (ev.y - base_y) * 5;
+        base_x = ev.x;
+        base_y = ev.y;
+        pimage.setPlevel(pimage.plevel + clevel);
+        pimage.setPwidth(pimage.pwidth + cwidth);
 
-            throttle(function () {
-                TestST.renderer.render(pimage);
-            }, 40)();
-        };
-    };
+        throttle(function () {
+            TestST.renderer.render(pimage);
+        })();
+    }
+
+    function move2(ev) {
+        if (base_x == null || base_y == null) {
+            base_x = ev.touches[0].screenX;
+            base_y = ev.touches[0].screenY;
+            return;
+        }
+        var clevel = (ev.touches[0].screenX - base_x) * 5;
+        var cwidth = (ev.touches[0].screenY - base_y) * 5;
+        base_x = ev.touches[0].screenX;
+        base_y = ev.touches[0].screenY;
+        pimage.setPlevel(pimage.plevel + clevel);
+        pimage.setPwidth(pimage.pwidth + cwidth);
+
+        throttle(function () {
+            TestST.renderer.render(pimage);
+        })();
+    }
+    canvas.addEventListener('touchmove', move2, false);
+    canvas.onmousemove = move1;
 };
 
 var throttle = function throttle(fn, interval) {
@@ -995,10 +1026,10 @@ var throttle = function throttle(fn, interval) {
             clearTimeout(timer);
             timer = null;
             _self.apply(_me, args);
-        }, interval || 500);
+        }, interval);
     };
 };
 
 }());
 
-//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoianMvbWFpbi5qcyIsInNvdXJjZXMiOltdLCJzb3VyY2VzQ29udGVudCI6W10sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OyJ9
+//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoianMvbWFpbi5qcyIsInNvdXJjZXMiOltdLCJzb3VyY2VzQ29udGVudCI6W10sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OzsifQ==

@@ -4,11 +4,11 @@ export default class PImage extends Base {
     vertiecs = [];
     colors = [];
     filters = [];
-    plength = 2047.0;
-    pwidth = 350.0;
-    plevel = 50.0;
-
-    constructor(img, plength, pwidth, plevel) {
+    plength = 3121.0;
+    pwidth = 8191.0;
+    plevel = 4096.0;
+    pinverse = false;
+    constructor(img, plength, pwidth, plevel,isInverse) {
         super();
         let pixels = PImage.getPixels(img);
         this.colors = PImage.getColor(pixels);
@@ -20,6 +20,7 @@ export default class PImage extends Base {
         plength && (this.plength = plength);
         pwidth && (this.pwidth = pwidth);
         plevel && (this.plevel = plevel);
+        isInverse&&(this.pinverse = isInverse);
 
         return this;
     }
@@ -33,6 +34,7 @@ export default class PImage extends Base {
         }
         return true;
     }
+
     setPlength(length) {
         this.plength = length;
     }
@@ -41,6 +43,9 @@ export default class PImage extends Base {
     }
     setPlevel(level) {
         this.plevel = level;
+    }
+    setPinverse(isInverse){
+        this.inverse = isInverse;
     }
     static getPixels(img) {
         let canvas = document.createElement('canvas');

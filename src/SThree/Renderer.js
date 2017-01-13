@@ -1,4 +1,5 @@
 import {matIV} from './minMatrix.js';
+import Shader from './Shader/index';
 
 export default class Renderer {
     view = {}; //domElement
@@ -10,6 +11,8 @@ export default class Renderer {
         canvas.height = height;
         this.view = canvas;
         this.gl = Renderer.create3DContext(canvas);
+        let shader = new Shader.Cateyes();
+        this.gl.program = shader.initShader(this.gl)
         return this;
     }
 
@@ -38,8 +41,8 @@ export default class Renderer {
         gl.enable(gl.DEPTH_TEST);
 
 
-        let shader = particle.filters[0];
-        this.gl.program = shader.initShader(this.gl);
+        // let shader = particle.filters[0];
+        // this.gl.program = shader.initShader(this.gl);
         
         var m = new matIV();  
         
@@ -49,7 +52,7 @@ export default class Renderer {
         var mvpMatrix = m.identity(m.create());  
         
         // 视图变换坐标矩阵
-        m.lookAt([0.0, 0.0, 0.5], [0, 0, 0], [0, 2, 0], vMatrix);  
+        m.lookAt([0.0, 0.0, 1.0], [0, 0, 0], [0, 2, 0], vMatrix);  
         
         // 投影坐标变换矩阵         
         m.perspective(90, canvas.width / canvas.height, 0.01, 1000, pMatrix);  
@@ -65,10 +68,11 @@ export default class Renderer {
         let plevelLocation = gl.getUniformLocation(this.gl.program,'plevel');
         let pwidthLocation = gl.getUniformLocation(this.gl.program,'pwidth');
         let plengthLocation = gl.getUniformLocation(this.gl.program,'plength');
+        let pinverseLocation = gl.getUniformLocation(this.gl.program,'pinverse');
         gl.uniform1f(plevelLocation,particle.plevel);
         gl.uniform1f(pwidthLocation,particle.pwidth);
         gl.uniform1f(plengthLocation,particle.plength);
-        
+        gl.uniform1f(pinverseLocation,particle.pinverse);
         gl.viewport(0, 0, canvas.width, canvas.height);
 
         particle.loadBuffer(this.gl);

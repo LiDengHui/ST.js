@@ -11,7 +11,7 @@ document
     .appendChild(TestST.renderer.view);
 
 let img = new Image();
-img.src = "/assert/dicom/572991083d89acc32bb32a6a2be088b6";
+img.src = "/assert/dicom/12e20f8ce961763f7b1143e9077609e9";
 let pimage =null;
 img.onload = () => {
     pimage = new PImage(img);
@@ -21,33 +21,53 @@ img.onload = () => {
     
     bindClick();
 };
-
+document.querySelector('body').addEventListener('touchstart', function (ev) {
+    event.preventDefault();
+});
 let bindClick=function(){
     let canvas = TestST.renderer.view;
-    canvas.onmousedown=function(ev){
-        let base_x = ev.x;
-        let base_y = ev.y;
-        canvas.onmouseup =function(ev){
-            canvas.onmousemove = null;
-            canvas.onmouseup = null;
-        };
-
-        canvas.onmousemove=function(ev){
-            let clevel = (ev.x-base_x)*1;
-            let cwidth = (ev.y-base_y)*1;
+    let base_x =null;
+    let base_y = null;
+    
+    function move1(ev){
+        if(base_x==null||base_y==null){
             base_x = ev.x;
             base_y = ev.y;
-            pimage.setPlevel(pimage.plevel+clevel);
-            pimage.setPwidth(pimage.pwidth+cwidth);
+            return ;
+        }
+        let clevel = (ev.x-base_x)*5;
+        let cwidth = (ev.y-base_y)*5;
+        base_x = ev.x;
+        base_y = ev.y;
+        pimage.setPlevel(pimage.plevel+clevel);
+        pimage.setPwidth(pimage.pwidth+cwidth);
 
-            throttle(function(){
-                TestST.renderer.render(pimage);
-            },40)();
-        };
-
-        
+        throttle(function(){
+            TestST.renderer.render(pimage);
+        })();
     };
+
+    function move2(ev){
+        if(base_x==null||base_y==null){
+            base_x = ev.touches[0].screenX;
+            base_y = ev.touches[0].screenY;
+            return ;
+        }
+        let clevel = (ev.touches[0].screenX-base_x)*5;
+        let cwidth = (ev.touches[0].screenY-base_y)*5;
+        base_x = ev.touches[0].screenX;
+        base_y = ev.touches[0].screenY;
+        pimage.setPlevel(pimage.plevel+clevel);
+        pimage.setPwidth(pimage.pwidth+cwidth);
+
+        throttle(function(){
+            TestST.renderer.render(pimage);
+        })();
+    };
+    canvas.addEventListener('touchmove',move2,false);
+    canvas.onmousemove=move1;
 };
+
 
 
 let throttle = function(fn, interval) {
@@ -72,7 +92,7 @@ let throttle = function(fn, interval) {
             clearTimeout(timer);
             timer = null;
             _self.apply(_me, args);
-        }, interval || 500);
+        }, interval);
     };
 };
 
