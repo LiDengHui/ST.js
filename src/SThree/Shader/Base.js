@@ -2,7 +2,7 @@ export default class Base {
     gl = {};
     vshader = {};
     fshader = {};
-    program = {};
+    program = null;
 
     constructor(gl, vshader, fshader) {
         this.gl = gl;
@@ -14,7 +14,9 @@ export default class Base {
     }
     initShader(gl){
         this.gl = gl;
-        this.program = Base.createProgram(this.gl, this.vshader, this.fshader);
+        if(!this.program){
+            this.program = Base.createProgram(this.gl, this.vshader, this.fshader);   
+        }
         
         if (!this.program) {
             console.log('Failed to create program');
