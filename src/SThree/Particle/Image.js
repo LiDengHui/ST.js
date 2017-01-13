@@ -6,7 +6,7 @@ export default class PImage extends Base {
     filters = [];
     plength = 3121.0;
     pwidth = 8191.0;
-    plevel = 4096.0;
+    plevel = 230.0;
     pinverse = false;
     constructor(img, plength, pwidth, plevel,isInverse) {
         super();

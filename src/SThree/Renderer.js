@@ -12,7 +12,10 @@ export default class Renderer {
         this.view = canvas;
         this.gl = Renderer.create3DContext(canvas);
         let shader = new Shader.Cateyes();
-        this.gl.program = shader.initShader(this.gl)
+        this.gl.program = shader.initShader(this.gl);
+        this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+        this.gl.enable(this.gl.DEPTH_TEST);
+
         return this;
     }
 
@@ -37,9 +40,7 @@ export default class Renderer {
     render(particle) {
         let gl = this.gl;
         let canvas = this.canvas;
-        gl.clearColor(1.0, 1.0, 1.0, 1.0);
-        gl.enable(gl.DEPTH_TEST);
-
+       
 
         // let shader = particle.filters[0];
         // this.gl.program = shader.initShader(this.gl);
@@ -52,7 +53,7 @@ export default class Renderer {
         var mvpMatrix = m.identity(m.create());  
         
         // 视图变换坐标矩阵
-        m.lookAt([0.0, 0.0, 1.0], [0, 0, 0], [0, 2, 0], vMatrix);  
+        m.lookAt([0.0, 0.0, 1.06], [0, 0, 0], [0, 3, 0], vMatrix);  
         
         // 投影坐标变换矩阵         
         m.perspective(90, canvas.width / canvas.height, 0.01, 1000, pMatrix);  
